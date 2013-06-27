@@ -67,12 +67,28 @@ sealed trait TrackResult[A, B] {
 
 trait TrackResultFunctions
 
-trait TrackResultInstances {
-  implicit def TrackResultFunctor[A]: Functor[({type λ[α] = TrackResult[A, α]})#λ] =
-    new Functor[({type λ[α] = TrackResult[A, α]})#λ] {
-      def map[X, Y](fa: TrackResult[A, X])(f: X => Y) =
+trait TrackResultInstances0 {
+
+  implicit def TrackResultInstance[A] =
+    new Traverse[({type λ[α] = TrackResult[A, α]})#λ] with Comonad[({type λ[α] = TrackResult[A, α]})#λ] {
+      def traverseImpl[G[_], X, Y](fa: TrackResult[A, X])(f: X => G[Y])(implicit A: Applicative[G]) =
+        fa traverse f
+
+      def cobind[X, Y](fa: TrackResult[A, X])(f: TrackResult[A, X] => Y) =
+        fa coflatMap f
+
+      def cojoin[X](t: TrackResult[A, X]) =
+        t.duplicate
+
+      def copoint[X](t: TrackResult[A, X]) =
+        t.result
+
+      override def map[X, Y](fa: TrackResult[A, X])(f: X => Y) =
         fa map f
     }
+}
+
+trait TrackResultInstances extends TrackResultInstances0 {
 
   implicit def TrackResultBind[A](implicit S: Semigroup[A]): Bind[({type λ[α] = TrackResult[A, α]})#λ] =
     new Bind[({type λ[α] = TrackResult[A, α]})#λ] {
@@ -93,27 +109,6 @@ trait TrackResultInstances {
 
       def point[X](a: => X) =
         TrackResult(M.zero, a)
-    }
-
-  implicit def TrackResultComonad[A]: Comonad[({type λ[α] = TrackResult[A, α]})#λ] =
-    new Comonad[({type λ[α] = TrackResult[A, α]})#λ] {
-      def cobind[X, Y](fa: TrackResult[A, X])(f: TrackResult[A, X] => Y) =
-        fa coflatMap f
-
-      def cojoin[X](t: TrackResult[A, X]) =
-        t.duplicate
-
-      def copoint[X](t: TrackResult[A, X]) =
-        t.result
-
-      override def map[X, Y](fa: TrackResult[A, X])(f: X => Y) =
-        fa map f
-    }
-
-  implicit def TrackResultTraverse[A]: Traverse[({type λ[α] = TrackResult[A, α]})#λ] =
-    new Traverse[({type λ[α] = TrackResult[A, α]})#λ] {
-      def traverseImpl[G[_], X, Y](fa: TrackResult[A, X])(f: X => G[Y])(implicit A: Applicative[G]) =
-        fa traverse f
     }
 
   implicit def TrackResultEqual[A, B](implicit EA: Equal[A], EB: Equal[B]): Equal[TrackResult[A, B]] =

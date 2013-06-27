@@ -47,14 +47,14 @@ sealed trait TrackRun[A, B, X] {
 
   def show(implicit SA: Show[A], SB: Show[B], SX: Show[X]): Cord =
     ("[ ": Cord) ++ SX.show(result) ++ " ] <~ " ++ implicitly[Show[TrackResults[A, B]]].show(tracks)
-  
+
 }
 
 trait TrackRunFunctions
 
 trait TrackRunInstances {
-  implicit def TrackRunMonad[A, B]: Monad[({type λ[α] = TrackRun[A, B, α]})#λ] =
-    new Monad[({type λ[α] = TrackRun[A, B, α]})#λ] {
+  implicit def TrackRunInstance[A, B] =
+    new Monad[({type λ[α] = TrackRun[A, B, α]})#λ] with Comonad[({type λ[α] = TrackRun[A, B, α]})#λ] with Traverse[({type λ[α] = TrackRun[A, B, α]})#λ] {
       def bind[X, Y](fa: TrackRun[A, B, X])(f: X => TrackRun[A, B, Y]) =
         fa flatMap f
 
@@ -63,10 +63,7 @@ trait TrackRunInstances {
 
       def point[X](a: => X) =
         TrackRun(a, TrackResults.empty)
-    }
 
-  implicit def TrackRunComonad[A, B]: Comonad[({type λ[α] = TrackRun[A, B, α]})#λ] =
-    new Comonad[({type λ[α] = TrackRun[A, B, α]})#λ] {
       def cobind[X, Y](fa: TrackRun[A, B, X])(f: TrackRun[A, B, X] => Y) =
         fa coflatMap f
 
@@ -76,16 +73,10 @@ trait TrackRunInstances {
       def copoint[X](t: TrackRun[A, B, X]) =
         t.result
 
-      override def map[X, Y](fa: TrackRun[A, B, X])(f: X => Y) =
-        fa map f
-    }
-
-  implicit def TrackRunTraverse[A, B]: Traverse[({type λ[α] = TrackRun[A, B, α]})#λ] =
-    new Traverse[({type λ[α] = TrackRun[A, B, α]})#λ] {
       def traverseImpl[G[_], X, Y](fa: TrackRun[A, B, X])(f: X => G[Y])(implicit A: Applicative[G]) =
         fa traverse f
     }
-  
+
   implicit def TrackRunEqual[A, B, X](implicit EA: Equal[A], EB: Equal[B], EX: Equal[X]): Equal[TrackRun[A, B, X]] =
     new Equal[TrackRun[A, B, X]] {
       def equal(a1: TrackRun[A, B, X], a2: TrackRun[A, B, X]) =

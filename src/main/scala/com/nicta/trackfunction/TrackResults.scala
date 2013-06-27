@@ -85,12 +85,26 @@ trait TrackResultsFunctions {
     TrackResults(Nil)
 }
 
-trait TrackResultsInstances {
-  implicit def TrackResultsFunctor[A]: Functor[({type λ[α] = TrackResults[A, α]})#λ] =
-    new Functor[({type λ[α] = TrackResults[A, α]})#λ] {
-      def map[X, Y](fa: TrackResults[A, X])(f: X => Y) =
+trait TrackResultsInstances0 {
+
+  implicit def TrackResultsInstance[A] =
+    new Traverse[({type λ[α] = TrackResults[A, α]})#λ] with Cobind[({type λ[α] = TrackResults[A, α]})#λ] with Cojoin[({type λ[α] = TrackResults[A, α]})#λ] {
+      def cobind[X, Y](fa: TrackResults[A, X])(f: TrackResults[A, X] => Y) =
+        fa coflatMap f
+
+      def traverseImpl[G[_], X, Y](fa: TrackResults[A, X])(f: X => G[Y])(implicit A: Applicative[G]) =
+        fa traverse f
+
+      def cojoin[X](fa: TrackResults[A, X]) =
+        fa.duplicate
+
+      override def map[X, Y](fa: TrackResults[A, X])(f: X => Y) =
         fa map f
     }
+
+}
+
+trait TrackResultsInstances extends TrackResultsInstances0 {
 
   implicit def TrackResultsBind[A](implicit S: Semigroup[A]): Bind[({type λ[α] = TrackResults[A, α]})#λ] =
     new Bind[({type λ[α] = TrackResults[A, α]})#λ] {
@@ -111,31 +125,6 @@ trait TrackResultsInstances {
 
       def point[X](a: => X) =
         TrackResults(List(implicitly[Applicative[({type λ[α] = TrackResult[A, α]})#λ]].point(a)))
-    }
-
-  implicit def TrackResultsCobind[A]: Cobind[({type λ[α] = TrackResults[A, α]})#λ] =
-    new Cobind[({type λ[α] = TrackResults[A, α]})#λ] {
-      def cobind[X, Y](fa: TrackResults[A, X])(f: TrackResults[A, X] => Y) =
-        fa coflatMap f
-
-      override def map[X, Y](fa: TrackResults[A, X])(f: X => Y) =
-        fa map f
-    }
-
-  implicit def TrackResultsTraverse[A]: Traverse[({type λ[α] = TrackResults[A, α]})#λ] =
-    new Traverse[({type λ[α] = TrackResults[A, α]})#λ] {
-      def traverseImpl[G[_], X, Y](fa: TrackResults[A, X])(f: X => G[Y])(implicit A: Applicative[G]) =
-        fa traverse f
-    }
-
-  implicit def TrackResultsCojoin[A]: Cojoin[({type λ[α] = TrackResults[A, α]})#λ] =
-    new Cojoin[({type λ[α] = TrackResults[A, α]})#λ] {
-      def cojoin[X](fa: TrackResults[A, X]) =
-        fa.duplicate
-
-      override def map[X, Y](fa: TrackResults[A, X])(f: X => Y) =
-        fa map f
-
     }
 
   implicit def TrackResultsEqual[A, B](implicit EA: Equal[A], EB: Equal[B]): Equal[TrackResults[A, B]] =
