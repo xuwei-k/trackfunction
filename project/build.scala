@@ -4,27 +4,26 @@ import com.typesafe.sbt.pgp.PgpKeys._
 import Tools.onVersion
 
 object build extends Build {
-  type Sett = Project.Setting[_]
 
-  val base = Defaults.defaultSettings ++ ScalaSettings.all ++ Seq[Sett](
+  val base = Defaults.defaultSettings ++ ScalaSettings.all ++ seq(
       organization := "NICTA"
     , version := "1.0-SNAPSHOT"
+    , scalaVersion := "2.10.2"
   )
 
-  val scalaz = "org.scalaz" %% "scalaz-core" % "7.0.0"
-  val scalacheck = "org.scalacheck" %% "scalacheck" % "1.10.0" % "test" cross(CrossVersion.full)
-  val specs2_1_12_3 = "org.specs2" %% "specs2" % "1.12.3" % "test"
-  val specs2_1_13 = "org.specs2" %% "specs2" % "1.13" % "test"
+  val scalazVersion = "7.0.3"
+
+  val scalaz = "org.scalaz" %% "scalaz-core" % scalazVersion
 
   val trackfunction = Project(
     id = "trackfunction"
   , base = file(".")
-  , settings = base ++ ReplSettings.all ++ PublishSettings.all ++ InfoSettings.all ++ Seq[Sett](
+  , settings = base ++ ReplSettings.all ++ PublishSettings.all ++ InfoSettings.all ++ seq(
       name := "trackfunction"
-    , libraryDependencies <++= onVersion(
-        all = Seq(scalaz, scalacheck)
-      , on292 = Seq(specs2_1_12_3)
-      , on210 = Seq(specs2_1_13)
+    , libraryDependencies ++= Seq(
+        scalaz
+      , "org.scalaz" %% "scalaz-scalacheck-binding" % scalazVersion % "test"
+      , "org.typelevel" %% "scalaz-specs2" % "0.1.4" % "test"
       )
     )
   )
@@ -33,7 +32,7 @@ object build extends Build {
     id = "examples"
   , base = file("examples")
   , dependencies = Seq(trackfunction)
-  , settings = base ++ Seq[Sett](
+  , settings = base ++ seq(
       name := "trackfunction-examples"
     , fork in run := true
     , libraryDependencies ++= Seq(scalaz)
