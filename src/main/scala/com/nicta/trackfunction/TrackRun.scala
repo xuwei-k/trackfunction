@@ -70,7 +70,7 @@ trait TrackRunInstances {
       def cobind[X, Y](fa: TrackRun[A, B, X])(f: TrackRun[A, B, X] => Y) =
         fa coflatMap f
 
-      def cojoin[X](t: TrackRun[A, B, X]) =
+      override def cojoin[X](t: TrackRun[A, B, X]) =
         t.duplicate
 
       def copoint[X](t: TrackRun[A, B, X]) =

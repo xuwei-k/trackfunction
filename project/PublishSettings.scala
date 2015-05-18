@@ -1,6 +1,5 @@
 import sbt._
 import Keys._
-import com.typesafe.sbt.pgp.PgpKeys._
 
 object PublishSettings {
   type Sett = Project.Setting[_]
@@ -13,7 +12,6 @@ object PublishSettings {
   , pomIncludeRepository := { _ => false }
   , licenses := Seq("BSD-3-Clause" -> url("http://www.opensource.org/licenses/BSD-3-Clause"))
   , homepage := Some(url("https://github.com/NICTA/trackfunction"))
-  , useGpg := true
   )
 
   lazy val pom: Sett =

@@ -128,16 +128,6 @@ trait TrackResultsInstances {
         fa traverse f
     }
 
-  implicit def TrackResultsCojoin[A]: Cojoin[({type λ[α] = TrackResults[A, α]})#λ] =
-    new Cojoin[({type λ[α] = TrackResults[A, α]})#λ] {
-      def cojoin[X](fa: TrackResults[A, X]) =
-        fa.duplicate
-
-      override def map[X, Y](fa: TrackResults[A, X])(f: X => Y) =
-        fa map f
-
-    }
-
   implicit def TrackResultsEqual[A, B](implicit EA: Equal[A], EB: Equal[B]): Equal[TrackResults[A, B]] =
     new Equal[TrackResults[A, B]] {
       def equal(a1: TrackResults[A, B], a2: TrackResults[A, B]) =

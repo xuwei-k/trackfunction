@@ -100,7 +100,7 @@ trait TrackResultInstances {
       def cobind[X, Y](fa: TrackResult[A, X])(f: TrackResult[A, X] => Y) =
         fa coflatMap f
 
-      def cojoin[X](t: TrackResult[A, X]) =
+      override def cojoin[X](t: TrackResult[A, X]) =
         t.duplicate
 
       def copoint[X](t: TrackResult[A, X]) =
